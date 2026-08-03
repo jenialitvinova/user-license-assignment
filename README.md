@@ -63,9 +63,17 @@ pip install -r requirements.txt
 docker compose up -d
 ```
 
-### 4. Configure environment
+---
 
-Copy
+## Configuration
+
+The application reads configuration from **environment variables**.
+
+### Azure Functions
+
+For local Azure Functions development:
+
+1. Copy
 
 ```text
 python/local.settings.example.json
@@ -77,7 +85,21 @@ to
 python/local.settings.json
 ```
 
-and update the values if necessary.
+2. Update the configuration values.
+
+When running with:
+
+```bash
+func start
+```
+
+Azure Functions Core Tools automatically loads the values from `local.settings.json` as environment variables.
+
+### Standalone Python
+
+For standalone local execution (`python3 run.py`), create a `.env` file inside the `python` directory using the same environment variable names.
+
+The application first checks the existing environment variables. If they are not available, it loads values from the local `.env` file.
 
 ---
 
@@ -106,6 +128,8 @@ cd python
 python3 import_users.py
 ```
 
+---
+
 ## Run Database Migrations
 
 Apply schema migrations before starting the application:
@@ -120,6 +144,7 @@ python3 -m app.migrations
 ## Run the Python Application
 
 ```bash
+cd python
 python3 run.py
 ```
 
@@ -132,6 +157,7 @@ The Python implementation is compatible with Azure Functions.
 Run locally:
 
 ```bash
+cd python
 func start
 ```
 
