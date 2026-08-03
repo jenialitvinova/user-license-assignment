@@ -106,6 +106,15 @@ cd python
 python3 import_users.py
 ```
 
+## Run Database Migrations
+
+Apply schema migrations before starting the application:
+
+```bash
+cd python
+python3 -m app.migrations
+```
+
 ---
 
 ## Run the Python Application

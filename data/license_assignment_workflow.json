@@ -1,5 +1,5 @@
 {
-  "name": "My workflow 3",
+  "name": "user-license-assignment",
   "nodes": [
     {
       "parameters": {},
@@ -10,7 +10,7 @@
         0
       ],
       "id": "9ce23037-ef84-4025-babd-68af71071b70",
-      "name": "When clicking ‘Execute workflow’"
+      "name": "Manual Trigger"
     },
     {
       "parameters": {
@@ -35,7 +35,7 @@
         0
       ],
       "id": "4c5402a7-ce97-4743-b494-00d7ecb7427c",
-      "name": "Select rows from a table",
+      "name": "Get Pending Users",
       "credentials": {
         "postgres": {
           "id": "jP2KrFeu3h47DkP5",
@@ -45,7 +45,7 @@
     },
     {
       "parameters": {
-        "url": "https://ai-automation-test.free.beeceptor.com/v1/licenses",
+        "url": "https://ai-automation-test.free.beeceptor.com/v1/users",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -55,7 +55,7 @@
         0
       ],
       "id": "3d76d67e-00ee-43fd-bf6d-ada912e96c8b",
-      "name": "HTTP Request"
+      "name": "Get API Users"
     },
     {
       "parameters": {
@@ -69,7 +69,20 @@
         0
       ],
       "id": "e1e4a6b5-6303-4f1b-91d3-c2f4150b684c",
-      "name": "HTTP Request1"
+      "name": "Get Available Licenses"
+    },
+    {
+      "parameters": {
+        "jsCode": "const pendingUsers = $input.all();\n\nconst apiUsers = $('Get API Users').first().json.value;\nconst licenses = $('Get Available Licenses').first().json.value;\n\n// Ищем лицензию M365_E3\nconst license = licenses.find(\n    l => l.skuPartNumber === 'M365_E3'\n);\n\nif (!license) {\n    throw new Error('License M365_E3 not found');\n}\n\nreturn pendingUsers.map(item => {\n    const dbUser = item.json;\n\n    const apiUser = apiUsers.find(\n        u => u.userPrincipalName === dbUser.user_principal_name\n    );\n\n    return {\n        json: {\n            userId: dbUser.id,\n            apiUserId: apiUser?.id,\n            licenseId: license.id,\n            userPrincipalName: dbUser.user_principal_name\n        }\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "86d1b9d8-0b86-45b4-8276-3473ffd04776",
+      "name": "Match Users & Prepare Assignment"
     },
     {
       "parameters": {
@@ -94,20 +107,7 @@
         0
       ],
       "id": "6a2b577d-ebbc-42b4-bd6f-aa90f9f5a1ca",
-      "name": "HTTP Request2"
-    },
-    {
-      "parameters": {
-        "jsCode": "const pendingUsers = $input.all();\n\nconst apiUsers = $('GET Users').first().json.value;\nconst licenses = $('GET Licenses').first().json.value;\n\n// Ищем лицензию M365_E3\nconst license = licenses.find(\n    l => l.skuPartNumber === 'M365_E3'\n);\n\nif (!license) {\n    throw new Error('License M365_E3 not found');\n}\n\nreturn pendingUsers.map(item => ({\n    json: {\n        dbUser: item.json,\n        apiUsers,\n        license\n    }\n}));"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        816,
-        0
-      ],
-      "id": "86d1b9d8-0b86-45b4-8276-3473ffd04776",
-      "name": "Code in JavaScript"
+      "name": "Assign Microsoft 365 License"
     },
     {
       "parameters": {
@@ -129,7 +129,7 @@
             "id": "={{$json.userId}}",
             "status": "Assigned",
             "message": "License assigned successfully",
-            "processed_at": "2026-07-31T00:23:56"
+            "api_user_id": "={{$json.apiUserId}}"
           },
           "matchingColumns": [
             "id"
@@ -213,7 +213,7 @@
         0
       ],
       "id": "352f889d-b59e-4ef2-b39f-9df326d35f36",
-      "name": "Update rows in a table",
+      "name": "Update User Status",
       "credentials": {
         "postgres": {
           "id": "jP2KrFeu3h47DkP5",
@@ -224,66 +224,66 @@
   ],
   "pinData": {},
   "connections": {
-    "When clicking ‘Execute workflow’": {
+    "Manual Trigger": {
       "main": [
         [
           {
-            "node": "Select rows from a table",
+            "node": "Get Pending Users",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Select rows from a table": {
+    "Get Pending Users": {
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "Get API Users",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request": {
+    "Get API Users": {
       "main": [
         [
           {
-            "node": "HTTP Request1",
+            "node": "Get Available Licenses",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request1": {
+    "Get Available Licenses": {
       "main": [
         [
           {
-            "node": "Code in JavaScript",
+            "node": "Match Users & Prepare Assignment",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Code in JavaScript": {
+    "Match Users & Prepare Assignment": {
       "main": [
         [
           {
-            "node": "HTTP Request2",
+            "node": "Assign Microsoft 365 License",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request2": {
+    "Assign Microsoft 365 License": {
       "main": [
         [
           {
-            "node": "Update rows in a table",
+            "node": "Update User Status",
             "type": "main",
             "index": 0
           }
@@ -297,7 +297,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "41d9b364-fa72-4175-84c8-1df377ef4dc1",
+  "versionId": "72099d07-d244-43e2-9c64-f56c309e4873",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "e29222311324b2fcac5cd204f7dc71a04f09ce3c531c05fe2846130ed05f4a56"
