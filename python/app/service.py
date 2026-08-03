@@ -16,7 +16,7 @@ def process_users():
     )
 
     if license_info is None:
-        raise Exception(f"License '{LICENSE_CODE}' not found")
+        raise ValueError(f"License '{LICENSE_CODE}' not found")
 
     license_id = license_info["id"]
 
